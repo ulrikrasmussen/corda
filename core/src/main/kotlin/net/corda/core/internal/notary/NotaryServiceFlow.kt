@@ -10,6 +10,7 @@ import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.internal.PlatformVersionSwitches
 import net.corda.core.internal.checkParameterHash
+import net.corda.core.node.services.SerializableSpanContext
 import net.corda.core.utilities.seconds
 import net.corda.core.utilities.unwrap
 import java.lang.IllegalStateException
@@ -52,6 +53,9 @@ abstract class NotaryServiceFlow(
 
     @Suspendable
     override fun call(): Void? {
+        val spanContext = otherSideSession.receive<SerializableSpanContext>().unwrap { it }
+        val spanId = serviceHub.telemetryService.addRemoteSpanAndStartChildSpan(spanContext, "NotaryServiceFlow")
+
         val requestPayload = otherSideSession.receive<NotarisationPayload>().unwrap { it }
 
         val commitStatus = try {
@@ -96,6 +100,7 @@ abstract class NotaryServiceFlow(
             val error = IllegalStateException("Request that failed uniqueness reached signing code! Ignoring.")
             throw NotaryException(NotaryError.General(error))
         }
+        serviceHub.telemetryService.endSpan(spanId)
         return null
     }
 
