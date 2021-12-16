@@ -79,7 +79,7 @@ abstract class NotaryServiceFlow(
                 }
             }
 
-            val commitInputStatesSpanId = serviceHub.telemetryService.startSpan("Commit input states", parentSpanId = spanId)
+            val commitInputStatesSpanId = serviceHub.telemetryService.startSpan("Commit input states")
             service.commitInputStates(
                     tx.inputs,
                     tx.id,
