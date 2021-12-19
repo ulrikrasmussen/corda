@@ -53,9 +53,6 @@ abstract class NotaryServiceFlow(
 
     @Suspendable
     override fun call(): Void? {
-        val spanContext = otherSideSession.receive<SerializableSpanContext>().unwrap { it }
-        val spanId = serviceHub.telemetryService.addRemoteSpanAndStartChildSpan(spanContext, "NotaryServiceFlow")
-
         val requestPayload = otherSideSession.receive<NotarisationPayload>().unwrap { it }
 
         val commitStatus = try {
@@ -101,7 +98,6 @@ abstract class NotaryServiceFlow(
             val error = IllegalStateException("Request that failed uniqueness reached signing code! Ignoring.")
             throw NotaryException(NotaryError.General(error))
         }
-        serviceHub.telemetryService.endSpan(spanId)
         return null
     }
 
