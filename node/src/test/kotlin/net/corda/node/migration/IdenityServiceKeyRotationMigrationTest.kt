@@ -26,6 +26,7 @@ import net.corda.testing.node.MockServices
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.InputStream
 import kotlin.test.assertEquals
 
 class IdenityServiceKeyRotationMigrationTest {
@@ -84,7 +85,9 @@ class IdenityServiceKeyRotationMigrationTest {
         persist(charlie2.party.dbParty())
 
         Liquibase("migration/node-core.changelog-v20.xml", object : ClassLoaderResourceAccessor() {
-            override fun getResourcesAsStream(path: String) = super.getResourcesAsStream(path)?.firstOrNull()?.let { setOf(it) }
+            override fun openStream(relativeTo: String?, streamPath: String?): InputStream {
+                return super.openStream(relativeTo, streamPath)
+            }
         }, liquibaseDB).update(Contexts().toString())
 
         val dummyKey = Crypto.generateKeyPair().public

@@ -7,13 +7,14 @@ import liquibase.Liquibase
 import liquibase.database.jvm.JdbcConnection
 import liquibase.exception.LiquibaseException
 import liquibase.resource.ClassLoaderResourceAccessor
+import liquibase.resource.InputStreamList
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.utilities.contextLogger
 import net.corda.nodeapi.internal.MigrationHelpers.getMigrationResource
 import net.corda.nodeapi.internal.cordapp.CordappLoader
 import java.io.ByteArrayInputStream
-import java.io.InputStream
+import java.net.URI
 import java.nio.file.Path
 import java.sql.Connection
 import java.util.concurrent.locks.ReentrantLock
@@ -140,8 +141,8 @@ open class SchemaMigration(
     /**  Create a resource accessor that aggregates the changelogs included in the schemas into one dynamic stream. */
     protected class CustomResourceAccessor(val dynamicInclude: String, val changelogList: List<String?>, classLoader: ClassLoader) :
             ClassLoaderResourceAccessor(classLoader) {
-        override fun getResourcesAsStream(path: String): Set<InputStream> {
-            if (path == dynamicInclude) {
+        override fun openStreams(relativeTo: String, streamPath: String): InputStreamList {
+            if (streamPath == dynamicInclude) {
                 // Create a map in Liquibase format including all migration files.
                 val includeAllFiles = mapOf("databaseChangeLog"
                         to changelogList.filterNotNull().map { file -> mapOf("include" to mapOf("file" to file)) })
@@ -150,9 +151,9 @@ open class SchemaMigration(
                 val includeAllFilesJson = ObjectMapper().writeValueAsBytes(includeAllFiles)
 
                 // Return the json as a stream.
-                return setOf(ByteArrayInputStream(includeAllFilesJson))
+                return InputStreamList(URI(dynamicInclude), ByteArrayInputStream(includeAllFilesJson))
             }
-            return super.getResourcesAsStream(path)?.take(1)?.toSet() ?: emptySet()
+            return super.openStreams(relativeTo, streamPath)
         }
     }
 
