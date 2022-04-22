@@ -141,7 +141,7 @@ open class SchemaMigration(
     /**  Create a resource accessor that aggregates the changelogs included in the schemas into one dynamic stream. */
     protected class CustomResourceAccessor(val dynamicInclude: String, val changelogList: List<String?>, classLoader: ClassLoader) :
             ClassLoaderResourceAccessor(classLoader) {
-        override fun openStreams(relativeTo: String, streamPath: String): InputStreamList {
+        override fun openStreams(relativeTo: String?, streamPath: String?): InputStreamList {
             if (streamPath == dynamicInclude) {
                 // Create a map in Liquibase format including all migration files.
                 val includeAllFiles = mapOf("databaseChangeLog"
